@@ -1,23 +1,40 @@
-export class Account{
+export class Account {
     constructor(
-        private id:string,
-        private ownerId: string,
+        private id: string,
         private balance: number,
+        private ownerId: string,
         private createdAt: string
-    ){}
+    ) {}
 
-    getBalance(): number{
+    public getId(): string {
+        return this.id
+    }
+
+    public setId(value: string): void {
+        this.id = value
+    }
+
+    public getBalance(): number {
         return this.balance
     }
 
-    getId():string{
-        return this.id
+    public setBalance(value: number): void {
+        this.balance = value
     }
-    getOwnerId():string{
+
+    public getOwnerId(): string {
         return this.ownerId
     }
 
-    setBalance(value:number):void{
-         this.balance += value
+    public setOwnerId(value: string): void {
+        this.ownerId = value
+    }
+
+    public getCreatedAt(): string {
+        return this.createdAt
+    }
+
+    public setCreatedAt(value: string): void {
+        this.createdAt = value
     }
 }

@@ -1,9 +1,10 @@
 import express, { Request, Response } from 'express'
 import cors from 'cors'
-import { TAccountDB, TAccountDBPost, TUserDB, TUserDBPost } from './types'
-import { db } from './database/knex'
+import { TAccountDB, TAccountDBPost, TUserDB, TUserDBPost } from './types';
 import { User } from './models/User'
 import { Account } from './models/Account'
+import { UserDataBase} from './database/UserDataBase'
+import { AccountDataBase } from './database/AccountDataBase';
 
 const app = express()
 
@@ -34,31 +35,19 @@ app.get("/ping", async (req: Request, res: Response) => {
 
 app.get("/users", async (req: Request, res: Response) => {
     try {
-        const q = req.query.q
-
-        let usersDB
-
-        if (q) {
-            const result: TUserDB[] = await db("users").where("name", "LIKE", `%${q}%`)
-            usersDB = result
-        } else {
-            const result: TUserDB[] = await db("users")
-            usersDB = result
-        }
-            const users:User[]= usersDB.map((user)=>{
-                return new User(
-                    user.id,
-                    user.name,
-                    user.email,
-                    user.password,
-                    user.created_at,
-                )
+        const q = req.query.q as string
       
-    })
+        const usersDB= await new UserDataBase().findUser(q)
 
-        // console.log(users[0].getName())
+        const users: User[] = usersDB.map((userDB) => new User(
+            userDB.id,
+            userDB.name,
+            userDB.email,
+            userDB.password,
+            userDB.created_at
+        ))
+
         res.status(200).send(users)
-    
     } catch (error) {
         console.log(error)
 
@@ -98,39 +87,36 @@ app.post("/users", async (req: Request, res: Response) => {
             throw new Error("'password' deve ser string")
         }
 
-        const [ userDBExists ]: TUserDB[] | undefined[] = await db("users").where({ id })
+        // const [ userDBExists ]: TUserDB[] | undefined[] = await db("users").where({ id })
+
+const userDataBase= new UserDataBase()
+const userDBExists= await userDataBase.findUserById(id)
 
         if (userDBExists) {
             res.status(400)
             throw new Error("'id' já existe")
         }
 
-        // const newUser: TUserDBPost = {
-        //     id,
-        //     name,
-        //     email,
-        //     password
-        // }
-        const newUser= new User(
+        const newUser = new User(
             id,
             name,
             email,
             password,
             new Date().toISOString()
-        )
-        const newUserDB: TUserDB={
+        ) // yyyy-mm-ddThh:mm:sssZ
+
+        const newUserDB: TUserDB = {
             id: newUser.getId(),
             name: newUser.getName(),
             email: newUser.getEmail(),
             password: newUser.getPassword(),
-            created_at: newUser.getCreateAt()
+            created_at: newUser.getCreatedAt()
         }
-        
-// console.log(newUser)
-        await db("users").insert(newUserDB)
-        const [ userDB ]: TUserDB[] = await db("users").where({ id })
 
-        res.status(201).send(userDB)
+        // await db("users").insert(newUserDB)
+        await userDataBase.insertUser(newUserDB)
+
+        res.status(201).send(newUser)
     } catch (error) {
         console.log(error)
 
@@ -148,9 +134,18 @@ app.post("/users", async (req: Request, res: Response) => {
 
 app.get("/accounts", async (req: Request, res: Response) => {
     try {
-        const accountsDB: TAccountDB[] = await db("accounts")
+        // const accountsDB: TAccountDB[] = await db("accounts")
 
-        res.status(200).send(accountsDB)
+const accountsDB= await new AccountDataBase().findAccount()
+
+        const accounts = accountsDB.map((accountDB) => new Account(
+            accountDB.id,
+            accountDB.balance,
+            accountDB.owner_id,
+            accountDB.created_at
+        ))
+
+        res.status(200).send(accounts)
     } catch (error) {
         console.log(error)
 
@@ -170,21 +165,26 @@ app.get("/accounts/:id/balance", async (req: Request, res: Response) => {
     try {
         const id = req.params.id
 
-        const [ accountDB ]: TAccountDB[] | undefined[] = await db("accounts").where({ id })
+       const accountsDB = new AccountDataBase();
+       const accountDB= await accountsDB.findAccountById(id)
 
         if (!accountDB) {
             res.status(404)
             throw new Error("'id' não encontrado")
         }
 
-        const account: Account = new Account(
-            accountDB.id, 
-            accountDB.owner_id, 
-            accountDB.balance, 
-            accountDB.created_at
+  
+
+        const account = new Account(
+          accountDB.id,
+         accountDB.balance,
+          accountDB.owner_id,
+          accountDB.created_at
         )
 
-        res.status(200).send({ balance: account.getBalance() })
+        const balance = account.getBalance()
+
+        res.status(200).send({ balance })
     } catch (error) {
         console.log(error)
 
@@ -213,37 +213,39 @@ app.post("/accounts", async (req: Request, res: Response) => {
         if (typeof ownerId !== "string") {
             res.status(400)
             throw new Error("'ownerId' deve ser string")
+
         }
 
-        const [ accountDBExists ]: TAccountDB[] | undefined[] = await db("accounts").where({ id })
+        const accountsDB = new AccountDataBase();
+        const accountDBExists= await accountsDB.findAccountById(id)
+
+        // const [ accountDBExists ]: TAccountDB[] | undefined[] = await db("accounts").where({ id })
 
         if (accountDBExists) {
             res.status(400)
             throw new Error("'id' já existe")
         }
 
-        // const newAccount: TAccountDBPost = {
-        //     id,
-        //     owner_id: ownerId
-        // }
-
-        const newAccount: Account = new Account(
+        const newAccount = new Account(
             id,
-            ownerId,
             0,
+            ownerId,
             new Date().toISOString()
         )
 
-        const newAccountDb: TAccountDBPost={
+        const newAccountDB: TAccountDB = {
             id: newAccount.getId(),
-            owner_id: newAccount.getOwnerId()
-
+            balance: newAccount.getBalance(),
+            owner_id: newAccount.getOwnerId(),
+            created_at: newAccount.getCreatedAt()
         }
 
-        await db("accounts").insert(newAccountDb)
-        const [ accountDB ]: TAccountDB[] = await db("accounts").where({ id })
+        // const accountDB = new AccountDataBase();
+       await accountsDB.insertAccount(newAccountDB)
 
-        res.status(201).send(accountDB)
+        // await db("accounts").insert(newAccountDB)
+
+        res.status(201).send(newAccount)
     } catch (error) {
         console.log(error)
 
@@ -269,27 +271,28 @@ app.put("/accounts/:id/balance", async (req: Request, res: Response) => {
             throw new Error("'value' deve ser number")
         }
 
-        const [ accountDB ]: TAccountDB[] | undefined[] = await db("accounts").where({ id })
+        const accountDataBase = new AccountDataBase();
+        const accountDB= await accountDataBase.findAccountById(id)
 
         if (!accountDB) {
             res.status(404)
             throw new Error("'id' não encontrado")
         }
 
-        // accountDB.balance += value
-
-        const account: Account= new Account(
+        const account = new Account(
             accountDB.id,
-            accountDB.owner_id,
             accountDB.balance,
+            accountDB.owner_id,
             accountDB.created_at
         )
 
-        account.setBalance(value)
+        const newBalance = account.getBalance() + value
+        account.setBalance(newBalance)
+        await accountDataBase.editAccount(newBalance,id);
 
-        await db("accounts").update({ balance: account.getBalance() }).where({ id })
+        // await db("accounts").update({ balance: newBalance }).where({ id })
         
-        res.status(200).send(accountDB)
+        res.status(200).send(account)
     } catch (error) {
         console.log(error)
 
