@@ -1,9 +1,10 @@
 import { AccountDatabase } from "../database/AccountDatabase"
+import { BadRequestError, ID_INVALID } from "../errors/BadRequestError"
 import { Account } from "../models/Account"
 import { AccountDB } from "../types"
 
-export class AccountBusiness{
-    public getAccount=async(): Promise<Account[]>=>{
+export class AccountBusiness {
+    public getAccounts = async () => {
         const accountDatabase = new AccountDatabase()
         const accountsDB: AccountDB[] = await accountDatabase.findAccounts()
 
@@ -15,11 +16,9 @@ export class AccountBusiness{
         ))
 
         return accounts
-
-
     }
 
-    public getAccountBalance= async(id:string)=>{
+    public getAccountBalance = async (id: string) => {
         const accountDatabase = new AccountDatabase()
         const accountDB = await accountDatabase.findAccountById(id)
 
@@ -34,34 +33,37 @@ export class AccountBusiness{
             accountDB.created_at
         )
 
-        const balance = account.getBalance()
-
-        return balance
-    }
-
-    public createAccount= async(input:AccountDB)=>{
-
-        const {id, owner_id}= input
-        
-        if (typeof id !== "string") {
-            throw new Error("'id' deve ser string")
+        const output = {
+            balance: account.getBalance()
         }
 
-        if (typeof owner_id !== "string") {
-            throw new Error("'ownerId' deve ser string")
+        return output
+    }
+
+    public createAccount = async (input: any) => {
+        const { id, ownerId } = input
+
+        console.log(input)
+
+        if (typeof id !== "string") {
+            throw new BadRequestError(ID_INVALID)
+        }
+
+        if (typeof ownerId !== "string") {
+            throw new BadRequestError("'ownerId' deve ser string")
         }
 
         const accountDatabase = new AccountDatabase()
         const accountDBExists = await accountDatabase.findAccountById(id)
 
         if (accountDBExists) {
-            throw new Error("'id' já existe")
+            throw new BadRequestError("'id' já existe")
         }
 
         const newAccount = new Account(
             id,
             0,
-            owner_id,
+            ownerId,
             new Date().toISOString()
         )
 
@@ -74,20 +76,20 @@ export class AccountBusiness{
 
         await accountDatabase.insertAccount(newAccountDB)
 
-        return newAccount
+        const output = {
+            message: "Conta cadastrada com sucesso",
+            account: newAccount
+        }
 
+        return output
     }
 
-    public editAccount = async(id: string, value:number): Promise<number>=>{
-     
+    public editAccountBalance = async (input: any) => {
+        const { id, value } = input
 
         if (typeof value !== "number") {
             throw new Error("'value' deve ser number")
         }
-        if (typeof id !== "string") {
-            throw new Error("'id' deve ser string")
-        }
-     
 
         const accountDatabase = new AccountDatabase()
         const accountDB = await accountDatabase.findAccountById(id)
@@ -108,7 +110,11 @@ export class AccountBusiness{
 
         await accountDatabase.updateBalanceById(id, newBalance)
 
-        return newBalance
-
+        const output = {
+            message: "Saldo atualizado com sucesso",
+            balance: account.getBalance()
+        }
+        
+        return output
     }
 }

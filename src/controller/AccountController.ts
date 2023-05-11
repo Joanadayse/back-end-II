@@ -1,101 +1,97 @@
-import { Request, Response } from "express";
-import { AccountDatabase } from "../database/AccountDatabase";
-import { Account } from "../models/Account";
-import { AccountDB } from "../types";
-import { AccountBusiness } from "../business/AccountBusiness";
+import { Request, Response } from "express"
+import { AccountBusiness } from "../business/AccountBusiness"
+import { BaseError } from "../errors/BaseError"
 
 export class AccountController {
-  public getAccounts = async (req: Request, res: Response) => {
-    try {
-      const accountBusines = new AccountBusiness();
-      const result: Account[] = await accountBusines.getAccount();
-      res.status(200).send(result);
-    } catch (error) {
-      console.log(error);
-
-      if (req.statusCode === 200) {
-        res.status(500);
-      }
-
-      if (error instanceof Error) {
-        res.send(error.message);
-      } else {
-        res.send("Erro inesperado");
-      }
+    public getAccounts = async (req: Request, res: Response) => {
+        try {
+            const accountBusiness = new AccountBusiness()
+            const output = await accountBusiness.getAccounts()
+    
+            res.status(200).send(output)
+        } catch (error) {
+            console.log(error)
+    
+            if (req.statusCode === 200) {
+                res.status(500)
+            }
+    
+            if (error instanceof Error) {
+                res.send(error.message)
+            } else {
+                res.send("Erro inesperado")
+            }
+        }
     }
-  };
 
-  public getAccountBalance = async (req: Request, res: Response) => {
-    try {
-      const id = req.params.id;
-
-      const accountBussines = new AccountBusiness();
-      const balance = await accountBussines.getAccountBalance(id);
-      res.status(200).send({ balance });
-    } catch (error) {
-      console.log(error);
-
-      if (req.statusCode === 200) {
-        res.status(500);
-      }
-
-      if (error instanceof Error) {
-        res.send(error.message);
-      } else {
-        res.send("Erro inesperado");
-      }
+    public getAccountBalance = async (req: Request, res: Response) => {
+        try {
+            const id = req.params.id
+            
+            const accountBusiness = new AccountBusiness()
+            const output = await accountBusiness.getAccountBalance(id)
+    
+            res.status(200).send(output)
+        } catch (error) {
+            console.log(error)
+    
+            if (req.statusCode === 200) {
+                res.status(500)
+            }
+    
+            if (error instanceof Error) {
+                res.send(error.message)
+            } else {
+                res.send("Erro inesperado")
+            }
+        }
     }
-  };
 
-  public createAccount = async (req: Request, res: Response) => {
-    try {
-      const input: AccountDB = {
-        id: req.body.id,
-        owner_id: req.body.ownerId,
-        created_at: req.body.created_at,
-        balance: req.body.balance,
-      };
+    public createAccount = async (req: Request, res: Response) => {
+        try {
+            const input = {
+                id: req.body.id,
+                ownerId: req.body.owner_id
+            }
 
-      const accountBussines = new AccountBusiness();
-      const result = await accountBussines.createAccount(input);
+            console.log(input)
 
-      res.status(201).send({ message: "criado com sucesso!", account: result });
-    } catch (error) {
-      console.log(error);
-
-      if (req.statusCode === 200) {
-        res.status(500);
-      }
-
-      if (error instanceof Error) {
-        res.send(error.message);
-      } else {
-        res.send("Erro inesperado");
-      }
+            const accountBusiness = new AccountBusiness()
+            const output = await accountBusiness.createAccount(input)
+    
+            res.status(201).send(output)
+        } catch (error) {
+     if(error instanceof BaseError){
+        res.status(error.statusCode).send(error.message)
+     }else{
+        res.status(500).send("error inesperado")
+     }
+        }
     }
-  };
 
-  public editAccountBalance = async (req: Request, res: Response) => {
-    try {
-      const id = req.params.id;
-      const value = req.body.value;
+    public editAccountBalance = async (req: Request, res: Response) => {
+        try {
+            const input = {
+                id: req.params.id,
+                value: req.body.value
+            }
 
-      const accountBussiness= new AccountBusiness();
-    const result= await accountBussiness.editAccount(id,value)
+            const accountBusiness = new AccountBusiness()
+            const output = await accountBusiness.editAccountBalance(input)
 
-      res.status(200).send({message:"saldo atualizado", result});
-    } catch (error) {
-      console.log(error);
-
-      if (req.statusCode === 200) {
-        res.status(500);
-      }
-
-      if (error instanceof Error) {
-        res.send(error.message);
-      } else {
-        res.send("Erro inesperado");
-      }
+            res.status(200).send(output)
+        } catch (error) {
+            console.log(error)
+    
+            if (res.statusCode === 200) {
+                res.status(500)
+            }
+    
+            if (error instanceof Error) {
+                res.send(error.message)
+            } else {
+                res.send("Erro inesperado")
+            }
+        }
     }
-  };
 }
