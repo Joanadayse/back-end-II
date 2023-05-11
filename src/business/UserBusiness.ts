@@ -1,10 +1,10 @@
 import { UserDatabase } from "../database/UserDatabase"
+import { BadRequestError, ID_INVALID } from "../errors/BadRequestError"
 import { User } from "../models/User"
-import { UserDB, UserDBPost } from "../types"
+import { UserDB } from "../types"
 
-export class UserBusiness{
-
-    public getUsers= async (q:string | undefined):Promise<User[]>=>{
+export class UserBusiness {
+    public getUsers = async (q: string | undefined) => {
         const userDatabase = new UserDatabase()
         const usersDB = await userDatabase.findUsers(q)
 
@@ -16,35 +16,33 @@ export class UserBusiness{
             userDB.created_at
         ))
 
-        return (users)
+        return users
     }
 
-    public createUser=async (input:UserDBPost): Promise<void>=>{
-        const { id, name, email, password } = input;
-    
+    public createUser = async (input: any) => {
+        const { id, name, email, password } = input
+
         if (typeof id !== "string") {
-            throw new Error("'id' deve ser string")
+            throw new BadRequestError(ID_INVALID)
         }
 
         if (typeof name !== "string") {
-            throw new Error("'name' deve ser string")
+            throw new BadRequestError("'name' deve ser string")
         }
 
         if (typeof email !== "string") {
-            throw new Error("'email' deve ser string")
+            throw new BadRequestError("'email' deve ser string")
         }
 
         if (typeof password !== "string") {
-            throw new Error("'password' deve ser string")
+            throw new BadRequestError("'password' deve ser string")
         }
 
-        // informação vindo do DATABASE e sendo usada bussines
         const userDatabase = new UserDatabase()
         const userDBExists = await userDatabase.findUserById(id)
 
         if (userDBExists) {
-
-            throw new Error("'id' já existe")
+            throw new BadRequestError("'id' já existe")
         }
 
         const newUser = new User(
@@ -63,7 +61,13 @@ export class UserBusiness{
             created_at: newUser.getCreatedAt()
         }
 
-        await userDatabase.insertUser(newUserDB);
+        await userDatabase.insertUser(newUserDB)
 
+        const output = {
+            message: "Cadastro realizado com sucesso",
+            user: newUser
+        }
+
+        return output
     }
 }

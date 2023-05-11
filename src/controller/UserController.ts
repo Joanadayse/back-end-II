@@ -1,62 +1,44 @@
-import { Request, Response } from "express";
-import { UserDatabase } from "../database/UserDatabase";
-import { User } from "../models/User";
-import { UserDB, UserDBPost } from "../types";
-import { UserBusiness } from "../business/UserBusiness";
+import { Request, Response } from "express"
+import { UserBusiness } from "../business/UserBusiness"
+import { BaseError } from "../errors/BaseError"
 
 export class UserController {
-  public getUsers = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const q = req.query.q as string | undefined;
+    public getUsers = async (req: Request, res: Response) => {
+        try {
+            const q = req.query.q as string | undefined
 
-      const userBusiness = new UserBusiness();
-      const result = await userBusiness.getUsers(q);
-
-      res.status(200).send(result);
-    } catch (error) {
-      console.log(error);
-
-      if (req.statusCode === 200) {
-        res.status(500);
-      }
-
-      if (error instanceof Error) {
-        res.send(error.message);
-      } else {
-        res.send("Erro inesperado");
-      }
+            const userBusiness = new UserBusiness()
+            const output = await userBusiness.getUsers(q)
+    
+            res.status(200).send(output)
+        } catch (error) {
+          if(error instanceof BaseError){
+            res.status(error.statusCode).send(error.message)
+          }else{
+            res.status(500).send("error inesperado")
+          }
+        }
     }
-  };
 
-  public createUser = async (req: Request, res: Response) => {
-    try {
-      const { id, name, email, password } = req.body;
+    public createUser = async (req: Request, res: Response) => {
+        try {
+            const input = {
+                id: req.body.id,
+                name: req.body.name,
+                email: req.body.email,
+                password: req.body.password
+            }
 
-      const input: UserDBPost = {
-        id,
-        name,
-        email,
-        password,
-      };
-
-    //   informação vinda da bussiness e sendo usada na Controller
-      const userBusiness = new UserBusiness();
-      await userBusiness.createUser(input);
-
-
-      res.status(201).send({message: "usuario criado com sucesso", users: input});
-    } catch (error) {
-      console.log(error);
-
-      if (req.statusCode === 200) {
-        res.status(500);
-      }
-
-      if (error instanceof Error) {
-        res.send(error.message);
-      } else {
-        res.send("Erro inesperado");
-      }
+            const userBusiness = new UserBusiness()
+            const output = await userBusiness.createUser(input)
+    
+            res.status(201).send(output)
+        } catch (error) {
+            if(error instanceof BaseError){
+                res.status(error.statusCode).send(error.message)
+              }else{
+                res.status(500).send("error inesperado")
+              }
+        }
     }
-  };
 }
