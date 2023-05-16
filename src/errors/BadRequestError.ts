@@ -1,11 +1,9 @@
 import { BaseError } from "./BaseError";
 
-export const ID_INVALID= "'id' deve ser string "
-
-export class BadRequestError extends BaseError{
+export class BadRequestError extends BaseError {
     constructor(
-        message: string= "Requisição Invalida"
-    ){
-        super( 400, message)
+        message: string = "Requisição inválida" // mensagem de erro padrão caso não seja enviado um argumento
+    ) {
+        super(400, message)
     }
 }
