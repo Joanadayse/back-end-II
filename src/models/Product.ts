@@ -1,3 +1,9 @@
+export enum PRODUCT_ROLES {
+    NORMAL = "NORMAL",
+    ADMIN = "ADMIN"
+  }
+
+
 export interface ProductDB {
   id: string,
   name: string,

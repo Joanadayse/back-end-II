@@ -2,19 +2,32 @@ import { ProductDatabase } from "../database/ProductDatabase"
 import { CreateProductInputDTO, CreateProductOutputDTO } from "../dtos/product/createProduct.dto"
 import { GetProductsInputDTO, GetProductsOutputDTO } from "../dtos/product/getProducts.dto"
 import { BadRequestError } from "../errors/BadRequestError"
-import { Product } from "../models/Product"
-import { IdGenerator } from "../service/IdGenerator"
+import { PRODUCT_ROLES, Product } from "../models/Product"
+import { USER_ROLES } from "../models/User"
+import { HashManager } from "../services/HashManager"
+import { IdGenerator } from "../services/IdGenerator"
+import { TokenManager } from "../services/TokenManager"
 
 export class ProductBusiness {
   constructor(
     private productDatabase: ProductDatabase,
-    private idGenerator: IdGenerator
+    private idGenerator: IdGenerator,
+    private tokenManager: TokenManager
   ) { }
 
   public getProducts = async (
     input: GetProductsInputDTO
   ): Promise<GetProductsOutputDTO> => {
-    const { q } = input
+    const { q , token} = input
+
+    const payload= this.tokenManager.getPayload(token)
+    if (payload === null) {
+      throw new BadRequestError("token inválido")
+  }
+
+  if (payload.role !== USER_ROLES.ADMIN) {
+    throw new BadRequestError("somente admins podem acessar esse recurso")
+  }
 
     const productsDB = await this.productDatabase.findProducts(q)
 
@@ -37,15 +50,26 @@ export class ProductBusiness {
   public createProduct = async (
     input: CreateProductInputDTO
   ): Promise<CreateProductOutputDTO> => {
-    const { name, price } = input
+    // const { id, name, price } = input
+    const { name, price, token} = input
 
-    // const productDBExists = await this.productDatabase.findProductById()
+    // const productDBExists = await this.productDatabase.findProductById(id)
 
     // if (productDBExists) {
     //   throw new BadRequestError("'id' já existe")
     // }
 
-    const id= this.idGenerator.generate()
+    const id = this.idGenerator.generate()
+
+    const payload= this.tokenManager.getPayload(token)
+console.log(payload)
+    if (!payload) {
+      throw new BadRequestError("token inválido")
+  }
+
+  if (payload.role !== USER_ROLES.NORMAL) {
+    throw new BadRequestError("somente admins podem acessar esse recurso")
+  }
 
     const newProduct = new Product(
       id,
