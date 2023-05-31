@@ -2,14 +2,18 @@ import express from "express"
 import { ProductBusiness } from "../business/ProductBusiness"
 import { ProductController } from "../controller/ProductController"
 import { ProductDatabase } from "../database/ProductDatabase"
-import { IdGenerator } from "../service/IdGenerator"
+import { IdGenerator } from "../services/IdGenerator"
+import { TokenManager } from "../services/TokenManager"
+import { HashManager } from "../services/HashManager"
 
 export const productRouter = express.Router()
 
 const productController = new ProductController(
     new ProductBusiness(
         new ProductDatabase(),
-        new IdGenerator()
+        new IdGenerator(),
+        new TokenManager(),
+     
     )
 )
 

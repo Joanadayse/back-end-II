@@ -14,7 +14,8 @@ export class UserController {
   public getUsers = async (req: Request, res: Response) => {
     try {
       const input = GetUsersSchema.parse({
-        q: req.query.q
+        q: req.query.q,
+        token: req.headers.authorization
       })
 
       const output = await this.userBusiness.getUsers(input)
@@ -39,7 +40,8 @@ export class UserController {
         // id: req.body.id,
         name: req.body.name,
         email: req.body.email,
-        password: req.body.password
+        password: req.body.password,
+        isADM:req.body.isADM
       })
 
       const output = await this.userBusiness.signup(input)
