@@ -5,12 +5,12 @@
 
     - [x]  POO I
     - [x]  POO II
-    - [ ]  POO III
-    - [ ]  Arquitetura I
-    - [ ]  Arquitetura II
-    - [ ]  Arquitetura III
-    - [ ]  Arquitetura Limpa
-    - [ ]  Autenticação I
-    - [ ]  Autenticação II
+    - [x]  POO III
+    - [x]  Arquitetura I
+    - [x]  Arquitetura II
+    - [x]  Arquitetura III
+    - [x]  Arquitetura Limpa
+    - [x]  Autenticação I
+    - [x]  Autenticação II
 
 
